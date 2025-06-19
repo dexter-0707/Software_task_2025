@@ -19,8 +19,11 @@ while running:
         screen.fill("purple")
         draw_hands(hand_1, hand_2, deck, sprites)
         hand_1.append(44)
-        hand_1.append(105)
+        hand_1.append(41)
         game_start = True
+        for i in fields:
+            i.append(random.randint(1,12))
+        print(fields[turn], fields[turn-1])
     events = pygame.event.get()
     for event in events:
         if event.type == pygame.QUIT:
@@ -30,24 +33,30 @@ while running:
             if event.key == pygame.K_SPACE and type_check != "none" and selected_cards != [] and lock == False:
                 type_check = "none"
                 fields[turn-1].append(selected_cards[0])
-                b = print_field(turn-1, sprites, fields, screen)
-                if b == "turn win":
+                win = print_field(turn-1, sprites, fields, screen)
+                if win == "turn win":
                     running = False
                     print("player",turn,"wins")
-                elif b == "other win":
+                elif win == "other win":
                     running = False
                     if turn == 1:
                         print("player",2,"wins")
                     else:
                         print("player",1,"wins")
                 hands[turn-1].pop(hands[turn-1].index(int(selected_cards[0])))
-                reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2) # type: ignore
+                reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
                 print_hand(turn, sprites, hand_1, hand_2, screen)
                 card = int(selected_cards[0])
                 selected_cards = []
                 a = animal_played(card)
                 if a == "b":
-                    make_choice(sprites,player_choice)
+                    for i in sprites:
+                        if i.type == "notice":
+                            i.kill()
+                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
+                    sprites.add(Notice("blue", pygame.Rect(5,20,200,80),("Action Step"),"black"))
+
+                    make_choice(sprites,player_choice,target,discard,type_check)
                     lock = True
                 else: 
                     action_step = True
@@ -58,27 +67,34 @@ while running:
                         top_of_gy = i
                         hands[turn-1].pop(hands[turn-1].index(int(i)))    
                     draw(turn, number, hands, deck)
-                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2) # type: ignore
+                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
                     print_hand(turn, sprites, hand_1, hand_2, screen)
                     selected_cards = []
                     discard = False
                     action_step = True
                     play = False
             elif event.key == pygame.K_SPACE:
+                lock = True
                 if chain == []:
-                    if discard == True and len(hands[turn-1])-len(selected_cards) == 7:
+                    n = 7
+                    if 118 in fields[turn-1]:
+                        n+=2
+                    if 34 in fields[turn-1]:
+                        n -=5
+                    if discard == True and len(hands[turn-1])-len(selected_cards) == n:
                         print(hands[turn-1])
                         for i in selected_cards:
                             gy.append(i)
                             top_of_gy = i
                             hands[turn-1].pop(hands[turn-1].index(int(i)))    
-                        reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2) # type: ignore
+                        reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy) 
                         print_hand(turn, sprites, hand_1, hand_2, screen)
                         selected_cards = []
+                        lock = False
                     elif play == True and selected_cards:
                         chain.append(selected_cards[0])
                         hands[turn-1].pop(hands[turn-1].index(int(selected_cards[0])))
-                        reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2) # type: ignore
+                        reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy) 
                         print_hand(turn, sprites, hand_1, hand_2, screen)
                         print_chain(sprites, chain, screen)
                         selected_cards = []
@@ -86,22 +102,38 @@ while running:
                     if len(chain)>1:
                         pass
                     else:
+                        lock = False
                         card = int(chain[0])
                         for i in sprites:
                             if i.type != "notice":
                                 if i.position == "chain":
                                     if i.type[2:-3] == "magic":
-                                        magic_effects(card, turn, hands, gy, deck, fields, sprites, screen, hand_1, hand_2, top_of_gy)
+                                        effect = magic_effects(card, turn, hands, gy, deck, fields, sprites, screen, hand_1, hand_2, top_of_gy)
                                         print_hand(turn, sprites, hand_1, hand_2, screen)
                                         top_of_gy = card
                                         gy.append(card)
-                                    elif i.type[2:-3] == "animal":
-                                        fields[turn-1].append(card)
-                                        b = print_field(turn-1, sprites, fields, screen)
-                                        if b == "turn win":
+                                        if effect == "turn win":
                                             running = False
                                             print("player",turn,"wins")
-                                        elif b == "other win":
+                                        elif effect == "other win":
+                                            running = False
+                                            if turn == 1:
+                                                print("player",2,"wins")
+                                            else:
+                                                print("player",1,"wins")
+                                        try:
+                                            if effect[1] == "target":
+                                                target = True 
+                                                make_choice(sprites,player_choice,target,discard,type_check)
+                                                lock = True
+                                        except: pass
+                                    elif i.type[2:-3] == "animal":
+                                        fields[turn-1].append(card)
+                                        win = print_field(turn-1, sprites, fields, screen)
+                                        if win == "turn win":
+                                            running = False
+                                            print("player",turn,"wins")
+                                        elif win == "other win":
                                             running = False
                                             if turn == 1:
                                                 print("player",2,"wins")
@@ -109,10 +141,11 @@ while running:
                                                 print("player",1,"wins")
                                         a = animal_played(card)
                                         if a == "b":
-                                            make_choice(sprites, player_choice)
+                                            make_choice(sprites, player_choice,target,discard,type_check)
                                             lock = True
                                     elif i.type[2:-3] == "upgrade":
                                         fields[turn-1].append(card)
+                                        upgrade_effects(card, turn, hands, gy, deck, fields, sprites, screen, hand_1, hand_2, top_of_gy)
                                         print_field(turn-1, sprites, fields, screen)
                                     elif i.type[2:-3] == "downgrade":
                                         try:
@@ -121,7 +154,7 @@ while running:
                                             fields[turn-2].append(card)
                                         print_field(turn-1, sprites, fields, screen)
                                     i.kill()
-                                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2) # type: ignore
+                                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
                                     sprites.draw(screen)
                                     
                                     play = False
@@ -130,9 +163,10 @@ while running:
                     chain = []
     
     if beginning_of_turn == False:
+        print("lock", lock)
         sprites.add(Notice("blue", pygame.Rect(5,20,200,80),("Beginning"),"black"))
         print_field(turn-1, sprites, fields, screen)
-        reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2) # type: ignore
+        reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
         print_hand(turn, sprites, hand_1, hand_2, screen)
         beginning_of_turn = True
     elif draw_step == False:
@@ -153,28 +187,36 @@ while running:
             play = True
             z+=1 # type: ignore
     elif End_of_turn_step == False:
-        if len(hands[turn-1]) > 7:
+        n = 7
+        if 118 in fields[turn-1]:
+            n += 2
+        if 34 in fields[turn-1]:
+            n -=5
+        if len(hands[turn-1]) > n:
             if discard == False:
                 for i in sprites: 
                     if i.type == "notice":
                         i.kill()
-                
-                print(len(hands[turn-1])-7)
-                a = str(len(hands[turn-1])-7)
-                sprites.add(Notice("blue", pygame.Rect(410,100,400,100),("Discard "+a+" cards"),"black")) # type: ignore
+                reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
+                a =  str(len(hands[turn-1])-n)
+                if a != "1":
+                    sprites.add(Notice("blue", pygame.Rect(410,200,400,100),("Discard "+a+" cards"),"black"))
+                else:
+                    sprites.add(Notice("blue", pygame.Rect(410,200,400,100),("Discard "+a+" card"),"black"))
                 sprites.add(Notice("blue", pygame.Rect(5,20,200,80),("End Step"),"black"))
                 discard = True
         else:
             for i in sprites: 
                 if i.type == "notice":
                     i.kill()
-            reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2)
+            reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
             End_of_turn_step = True
             if turn == 1:
                 turn = 2
             else: 
                 turn = 1
-            reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2) # type: ignore
+            reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
+            lock = False
             hand_printed = False
             beginning_of_turn = False
             draw_step = False
@@ -190,6 +232,7 @@ while running:
         print(hands[turn-1])
         if effect[0] == "play":
             type_check = effect[1]
+            make_choice(sprites, player_choice, target, discard, type_check)
         elif effect[0] == "discard":
             if effect[1] == "self":
                 discard = True
@@ -199,11 +242,10 @@ while running:
                 play = False
                 player_choice = True
                 lock = True
-                make_choice(sprites, player_choice)
+            make_choice(sprites, player_choice,target,discard,type_check)
         else: 
             action_step = True
             play = False
-
     if target_player != 3:
         lock = False
         player_choice = False
@@ -214,27 +256,35 @@ while running:
         for i in range(a):
             hands[target_player].pop(0)
         draw(target_player+1,a,hands,deck)
-        reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2) # type: ignore
+        reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy) 
         print_hand(turn, sprites, hand_1, hand_2, screen)
         action_step = True
         target_player = 3
 
+
     a = ""
+    b = 0
     select = False
     for i in sprites:
         if i.type != "notice":
-            if i.update(events, discard, play, type_check):
-                a = i.update(events, discard, play, type_check)
+            if b == 0:
+                try: 
+                    if i.animal_type[2:-3] in type_check and i.position == "hand" and i.type[2:-3] == "animal":
+                        b+=1
+                except: pass                
+            if i.update(events, discard, play, type_check, target, effect): # type: ignore
+                a = i.update(events, discard, play, type_check, target, effect) # type: ignore
                 if a == "discard": 
                     select = True
                     a = i.id
+                    
                 elif a == "play":
                     select = True
                     a = i.id
                 elif a == "draw_action":
                     draw(turn,1, hands, deck)
                     selected_cards = []
-                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2)
+                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
                     print_hand(turn, sprites, hand_1, hand_2, screen)
                     play = False
                     action_step = True
@@ -249,14 +299,14 @@ while running:
                     for i in sprites:
                         if i.type == "button":
                             i.kill()
-                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2)
+                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
                     a = ""
                     choice = True
                 elif a == "no":
                     for i in sprites:
                         if i.type == "button":
                             i.kill()
-                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2)
+                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
                     a = ""
                     choice = False
                     play = False
@@ -268,20 +318,33 @@ while running:
                     for i in sprites:
                         if i.type == "button":
                             i.kill()
-                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2)
+                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
                     target_player = turn-1
                 elif a == "opponent":
                     a = ""
                     for i in sprites:
                         if i.type == "button":
                             i.kill()
-                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2)
+                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
                     if turn == 2:
                         target_player = turn-2
                     else: 
                         target_player = turn
+                elif a == "target":
+                    a = i.id
+                    for i in sprites:
+                        if i.type == "button":
+                            i.kill()
+                    select = True
                 else: 
                     into_play = False
+    if b == 0 and type_check !="none":
+        choice = False
+        play = False
+        action_step = True
+        lock = False
+        type_check = "none"
+    b = ""
     if a != "" and a: 
         card_change(a, screen)
         if select == True and lock == False:
@@ -322,7 +385,12 @@ while running:
                         except:
                             pass
                 else:
-                    if len(hands[turn-1])-len(selected_cards) == 7 and action_step == True:
+                    n = 7
+                    if 118 in fields[turn-1]:
+                        n +=2
+                    if 34 in fields[turn-1]:
+                        n -=5
+                    if len(hands[turn-1])-len(selected_cards) == n and action_step == True:
                         b = True
                         down_card = selected_cards[0]
                     selected_cards.append(a)
@@ -341,8 +409,22 @@ while running:
                                     i.rect.y += 50
                     selected_cards.pop(0)
                     b = False
-            reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2) # type: ignore    
-
+            reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
+        elif select == True:
+            if target == True:
+                if effect[0] == "destroy": # type: ignore
+                    try:
+                        fields[turn].pop(fields[turn].index(int(a)))
+                    except:
+                        fields[turn-2].pop(fields[turn-2].index(int(a)))
+                    top_of_gy = a
+                    gy.append(int(a))
+                    print_field(turn-1, sprites, fields, screen)
+                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
+                    lock = False
+                    action_step = True
+                    target = False
+                    select = False
     sprites.draw(screen)
     
     pygame.display.flip()

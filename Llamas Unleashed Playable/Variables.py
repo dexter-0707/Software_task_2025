@@ -86,3 +86,7 @@ def inits():
     player_choice = False
     global target_player
     target_player = 3
+    global target
+    target = False
+    global effect
+    effect = []

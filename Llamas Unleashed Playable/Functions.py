@@ -5,14 +5,14 @@ import sqlite3
 conn = sqlite3.connect('.database/data_source.db')
 c = conn.cursor()
 pygame.init()
-font = pygame.font.SysFont('comicsans', 40)
+font = pygame.font.SysFont('arialrounded', 35)
 
 def draw(k, n, hands, deck):
     for i in range(n):
         hands[k-1].append(deck[0])
         deck.pop(0)
 def draw_hands(hand_1, hand_2, deck, sprites):
-    for i in range(8):
+    for i in range(7):
         hand_1.append(deck[0])
         deck.pop(0)
         hand_2.append(deck[0])
@@ -66,13 +66,27 @@ def print_hand(k, sprites, hand_1, hand_2, screen):
             screen.blit(a,(position,-250))
             position += spacing
     sprites.draw(screen) 
-def reprint_hand(k, n, sprites, screen, hand_1, hand_2):
+def reprint_hand(k, n, sprites, screen, hand_1, hand_2, gy):
+    print(gy)
     position = 210
     spacing = 0
     sprites.draw(screen)
     screen.fill("purple")
     if n:
-        gy_change(n, screen)
+        n = int(n)
+        while n > 1000:
+            n-=1000
+        if n <= 12 and n != 0:
+            print(n)
+            if n == gy[-1]:
+                gy.pop()
+            if gy: 
+                n = gy[-1]
+                gy_change(n, screen, gy)
+            else:
+                n = 0
+        else: 
+            gy_change(n, screen, gy)
     if k == 1:
         if len(hand_2) > 4:
             spacing = (650)/(len(hand_2)-1)
@@ -105,10 +119,11 @@ def card_change(k, screen):
     image = pygame.image.load('public/'+ str(card[2:-3]))
     image = pygame.transform.smoothscale(image, (260,360))
     screen.blit(image,(1000,90))
-def gy_change(k, screen):
+def gy_change(k, screen, gy):
     a = int(k)
     while a >= 1000:
         a -= 1000
+
     sql = "SELECT image FROM Actual_Card_List WHERE id = " + str(a)
     c.execute(sql)
     card = str(c.fetchone())
@@ -173,15 +188,35 @@ def animal_played(k):
     if k in [17, 18, 19, 20, 24, 25, 26, 30, 31, 33, 34, 35, 36, 38, 40, 41, 42, 43, 44, 45, 46, 91, 94, 95, 96, 97, 99, 102, 104, 105]:
         to_return = "b"
     return to_return
-def make_choice(sprites, player_choice):
-    if player_choice == False:
-        sprites.add(Button("blue", "yellow", pygame.Rect(435,240,150,100),"yes", "Yes", "black"))
-        sprites.add(Button("blue", "yellow", pygame.Rect(635,240,150,100),"no", "No", "black"))
-        sprites.add (Button("blue", "blue", pygame.Rect(410,100,400,100), "none", "Use Card Effect?", "black"))
-    else: 
+def make_choice(sprites, player_choice, target, discard, type_check):
+    if player_choice == True:
         sprites.add(Button("blue", "yellow", pygame.Rect(435,240,150,100),"you", "You", "black"))
         sprites.add(Button("blue", "yellow", pygame.Rect(635,240,150,100),"opponent", "Opponent", "black"))
-        sprites.add (Button("blue", "blue", pygame.Rect(410,100,400,100), "none", "Choose a player", "black"))
+        sprites.add(Button("blue", "blue", pygame.Rect(410,100,400,100), "none", "Choose a player", "black"))
+    elif target == True:
+        sprites.add(Button("blue", "blue", pygame.Rect(410,210,400,100), "none", "Choose a target", "black"))
+    elif discard == True:
+        sprites.add(Notice("blue", pygame.Rect(310,210,600,100), "Discard any number of cards", "black"))
+    elif type_check != "none":
+        a = 0
+        b = 0
+        if type_check == "alpaca":
+            sprites.add(Notice("blue", pygame.Rect(310,210,600,100), str("Choose an "+type_check+" from your hand"), "black"))
+        elif type_check == "ram":
+            a = 360
+            b = 500
+        elif type_check == "llama":
+            a = 340
+            b = 540
+        elif type_check == "goat":
+            a = 350
+            b = 520
+        if a != 0 and b !=0 :
+            sprites.add(Notice("blue", pygame.Rect(a,210,b,100), str("Choose a "+type_check+" from your hand"), "black"))
+    else: 
+        sprites.add(Button("blue", "yellow", pygame.Rect(435,240,150,100),"yes", "Yes", "black"))
+        sprites.add(Button("blue", "yellow", pygame.Rect(635,240,150,100),"no", "No", "black"))
+        sprites.add(Button("blue", "blue", pygame.Rect(410,100,400,100), "none", "Use Card Effect?", "black"))
 
 
 def animal_effects(k,t, hands, gy, deck, fields,sprites,screen, hand_1, hand_2, top):
@@ -214,6 +249,7 @@ def animal_effects(k,t, hands, gy, deck, fields,sprites,screen, hand_1, hand_2, 
         to_return = ["play", "llama", "hand"]
     elif k == 41: 
         to_return = ["discard", "self", "any"]
+        sprites.add()
     elif k == 44:
         to_return = ["play", "ram", "hand"]
     elif k == 95:
@@ -222,7 +258,7 @@ def animal_effects(k,t, hands, gy, deck, fields,sprites,screen, hand_1, hand_2, 
             a += 1000
         fields[t-1].append(a)
         print_field(t-1,sprites,fields,screen)
-        reprint_hand(t, top, sprites, screen, hand_1, hand_2)
+        reprint_hand(t, top, sprites, screen, hand_1, hand_2, gy)
     elif k == 105:
         to_return = ["discard", "target", "all"]
     return to_return
@@ -245,6 +281,21 @@ def magic_effects(k, t, hands, gy, deck, fields,sprites,screen, hand_1, hand_2, 
             gy.pop()
             global top_of_gy
             top_of_gy = gy[-1]
+    elif k == 70:
+        to_return = ["destroy", "target", "animal"]
+    elif k == 111:
+        fields[t-1].append(random.randint(1,12))
+        win = print_field(t-1,sprites,fields,screen)
+        to_return = win
+    return to_return
+def upgrade_effects(k,t, hands, gy, deck, fields,sprites,screen, hand_1, hand_2, top):
+    to_return = "a"
+    while k > 1000:
+        k-=1000
+    if k == 118:
+        draw(t,2, hands, deck)
+        print_hand(t, sprites, hand_1, hand_2, screen)
+        reprint_hand(t, top, sprites, screen, hand_1, hand_2, gy)
     return to_return
 def begin_turn_effects(k):
     pass
@@ -276,7 +327,8 @@ class Card(pygame.sprite.Sprite):
         self.org = self._create_image(tmp_rect, "none", a)
         self.image = self.org
         self.rect = rect
-    def _create_image(self, rect, outline, a ):
+
+    def _create_image(self, rect, outline, a):
         img = pygame.Surface(rect.size)
         if a != 0:
             sql = "SELECT type FROM Actual_Card_List WHERE id = " + str(a)
@@ -305,15 +357,18 @@ class Card(pygame.sprite.Sprite):
             img.blit(a, (5,5))
         else: 
             img.blit(a, (0,0))
-        
-
         return img
-    def update(self, events, discard, play, type_check): # type: ignore
+
+    def update(self, events, discard, play, type_check, target, effect): # type: ignore
         pos = pygame.mouse.get_pos()
         hit = self.rect.collidepoint(pos)
         i = 1
         if self.animal_type[2:-3] in type_check and self.position == "hand" and self.type[2:-3] == "animal":
             self.image = self.targ
+        elif target == True:
+            if effect[0] == "destroy" and effect[2] == "animal":
+                if self.position == "field" and self.flip == True and self.type[2:-3] == "animal":
+                    self.image = self.targ
         else:
             self.image = self.org
         if type_check != "none":
@@ -356,11 +411,22 @@ class Card(pygame.sprite.Sprite):
                     elif hit:
                         return self.id
                     i+=1
+        elif target == True:
+            for event in events:
+                if i == 1:
+                    if event.type == pygame.MOUSEBUTTONDOWN and hit:
+                        if effect[0] == "destroy":
+                            if effect[2] == "animal":
+                                if self.position == "field" and self.flip == True and self.type[2:-3] == "animal":
+                                    return "target"
+                                else: return self.id
+                            else: return self.id
+                    elif hit:
+                        return self.id
+                    i+=1
         else:
             if hit:
                 return self.id
-#    def targetable(self, ):
-#        self.image = self.targ if hit else self.org
 class Button(pygame.sprite.Sprite):
     def __init__(self, color, color_hover, rect, callback, text='', outline=None, type = "button"):
         super().__init__()
@@ -377,21 +443,21 @@ class Button(pygame.sprite.Sprite):
         img = pygame.Surface(rect.size)
         if outline:
             img.fill(outline)
-            img.fill(color, rect.inflate(-4, -3))
+            img.fill(color, rect.inflate(-5, -5))
         else:
             img.fill(color)
 
         if text != '':
             if text == "Opponent":
-                font = pygame.font.SysFont('comicsans', 30)
+                font = pygame.font.SysFont('arialrounded', 26)
             else: 
-                font = pygame.font.SysFont('comicsans', 40)
+                font = pygame.font.SysFont('arialrounded', 35)
             text_surf = font.render(text, 1, pygame.Color('black'))
             text_rect = text_surf.get_rect(center=rect.center)
             img.blit(text_surf, text_rect)
         return img
 
-    def update(self, events, a, b, c):
+    def update(self, events, a, b, c, d, e):
         pos = pygame.mouse.get_pos()
         hit = self.rect.collidepoint(pos)
         self.image = self.hov if hit else self.org
@@ -400,7 +466,6 @@ class Button(pygame.sprite.Sprite):
             for event in events:
                 if event.type == pygame.MOUSEBUTTONDOWN and hit:
                     if i == 1:
-#                        print(self.callback)
                         i += 1
                         return self.callback
 class Notice(pygame.sprite.Sprite):
@@ -418,12 +483,12 @@ class Notice(pygame.sprite.Sprite):
         
         if outline:
             img.fill(outline)
-            img.fill(color, rect.inflate(-4, -3))
+            img.fill(color, rect.inflate(-5, -5))
         else:
             img.fill(color)
 
         if text != '':
-            font = pygame.font.SysFont('comicsans', 35)
+            font = pygame.font.SysFont('arialrounded', 30)
             text_surf = font.render(text, 1, pygame.Color('black'))
             text_rect = text_surf.get_rect(center=rect.center)
             img.blit(text_surf, text_rect)
