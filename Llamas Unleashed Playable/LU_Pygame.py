@@ -18,12 +18,25 @@ while running:
     if game_start == False:
         screen.fill("purple")
         draw_hands(hand_1, hand_2, deck, sprites)
-        hand_1.append(44)
-        hand_1.append(41)
+#        hand_1.append(17) # adorable alpaca
+#        hand_1.append(18) # alpacacopter
+#        hand_1.append(20) # magical alpacacorn
+#        hand_1.append(25) # magical goaticorn
+#        hand_1.append(31) # dalai llama
+#        hand_1.append(33) # magical llamacorn
+#        hand_1.append(34) # prehistoric llamadon
+#        hand_1.append(39) # henry the huarizo
+        hand_1.append(41) # gin-rammy
+        hand_1.append(44) # magical ramicorn
+#        hand_1.append(95) # mother goat
+#        hand_1.append(105) # woolly rammoth
+#        hand_2.append(66) # garbage buffet
+#        hand_2.append(70) # llama bomb
+#        hand_2.append(111) # animal adoption
+#        hand_2.append(118) # fannypaca
         game_start = True
         for i in fields:
             i.append(random.randint(1,12))
-        print(fields[turn], fields[turn-1])
     events = pygame.event.get()
     for event in events:
         if event.type == pygame.QUIT:
@@ -36,13 +49,13 @@ while running:
                 win = print_field(turn-1, sprites, fields, screen)
                 if win == "turn win":
                     running = False
-                    print("player",turn,"wins")
+                    print("Player",turn,"wins")
                 elif win == "other win":
                     running = False
                     if turn == 1:
-                        print("player",2,"wins")
+                        print("Player",2,"wins")
                     else:
-                        print("player",1,"wins")
+                        print("Player",1,"wins")
                 hands[turn-1].pop(hands[turn-1].index(int(selected_cards[0])))
                 reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
                 print_hand(turn, sprites, hand_1, hand_2, screen)
@@ -82,7 +95,6 @@ while running:
                     if 34 in fields[turn-1]:
                         n -=5
                     if discard == True and len(hands[turn-1])-len(selected_cards) == n:
-                        print(hands[turn-1])
                         for i in selected_cards:
                             gy.append(i)
                             top_of_gy = i
@@ -114,13 +126,13 @@ while running:
                                         gy.append(card)
                                         if effect == "turn win":
                                             running = False
-                                            print("player",turn,"wins")
+                                            print("Player",turn,"wins")
                                         elif effect == "other win":
                                             running = False
                                             if turn == 1:
-                                                print("player",2,"wins")
+                                                print("Player",2,"wins")
                                             else:
-                                                print("player",1,"wins")
+                                                print("Player",1,"wins")
                                         try:
                                             if effect[1] == "target":
                                                 target = True 
@@ -132,13 +144,13 @@ while running:
                                         win = print_field(turn-1, sprites, fields, screen)
                                         if win == "turn win":
                                             running = False
-                                            print("player",turn,"wins")
+                                            print("Player",turn,"wins")
                                         elif win == "other win":
                                             running = False
                                             if turn == 1:
-                                                print("player",2,"wins")
+                                                print("Player",2,"wins")
                                             else:
-                                                print("player",1,"wins")
+                                                print("Player",1,"wins")
                                         a = animal_played(card)
                                         if a == "b":
                                             make_choice(sprites, player_choice,target,discard,type_check)
@@ -163,7 +175,6 @@ while running:
                     chain = []
     
     if beginning_of_turn == False:
-        print("lock", lock)
         sprites.add(Notice("blue", pygame.Rect(5,20,200,80),("Beginning"),"black"))
         print_field(turn-1, sprites, fields, screen)
         reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
@@ -217,7 +228,6 @@ while running:
                 turn = 1
             reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
             lock = False
-            hand_printed = False
             beginning_of_turn = False
             draw_step = False
             action_step = False
@@ -229,7 +239,6 @@ while running:
         choice = False
         effect = animal_effects(card,turn, hands, gy, deck, fields, sprites, screen, hand_1, hand_2, top_of_gy)
         print_hand(turn, sprites, hand_1, hand_2, screen)
-        print(hands[turn-1])
         if effect[0] == "play":
             type_check = effect[1]
             make_choice(sprites, player_choice, target, discard, type_check)
@@ -260,84 +269,82 @@ while running:
         print_hand(turn, sprites, hand_1, hand_2, screen)
         action_step = True
         target_player = 3
-
+#        if i.type != "notice":
 
     a = ""
     b = 0
     select = False
     for i in sprites:
-        if i.type != "notice":
-            if b == 0:
-                try: 
-                    if i.animal_type[2:-3] in type_check and i.position == "hand" and i.type[2:-3] == "animal":
-                        b+=1
-                except: pass                
-            if i.update(events, discard, play, type_check, target, effect): # type: ignore
-                a = i.update(events, discard, play, type_check, target, effect) # type: ignore
-                if a == "discard": 
-                    select = True
-                    a = i.id
-                    
-                elif a == "play":
-                    select = True
-                    a = i.id
-                elif a == "draw_action":
-                    draw(turn,1, hands, deck)
-                    selected_cards = []
-                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
-                    print_hand(turn, sprites, hand_1, hand_2, screen)
-                    play = False
-                    action_step = True
-                    a = ""
-                elif a == "instant":
-                    a = ""
-                elif a == "into_play":
-                    select = True
-                    into_play = True
-                    a = i.id
-                elif a == "yes":
-                    for i in sprites:
-                        if i.type == "button":
-                            i.kill()
-                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
-                    a = ""
-                    choice = True
-                elif a == "no":
-                    for i in sprites:
-                        if i.type == "button":
-                            i.kill()
-                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
-                    a = ""
-                    choice = False
-                    play = False
-                    action_step = True
-                    lock = False
-                    type_check = "none"
-                elif a == "you":
-                    a = ""
-                    for i in sprites:
-                        if i.type == "button":
-                            i.kill()
-                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
-                    target_player = turn-1
-                elif a == "opponent":
-                    a = ""
-                    for i in sprites:
-                        if i.type == "button":
-                            i.kill()
-                    reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
-                    if turn == 2:
-                        target_player = turn-2
-                    else: 
-                        target_player = turn
-                elif a == "target":
-                    a = i.id
-                    for i in sprites:
-                        if i.type == "button":
-                            i.kill()
-                    select = True
+        if b == 0:
+            try: 
+                if i.animal_type[2:-3] in type_check and i.position == "hand" and i.type[2:-3] == "animal":
+                    b +=1
+            except: pass                
+        if i.update(events, discard, play, type_check, target, effect): 
+            a = i.update(events, discard, play, type_check, target, effect)
+            if a == "discard": 
+                select = True
+                a = i.id
+            elif a == "play":
+                select = True
+                a = i.id
+            elif a == "draw_action":
+                draw(turn,1, hands, deck)
+                selected_cards = []
+                reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
+                print_hand(turn, sprites, hand_1, hand_2, screen)
+                play = False
+                action_step = True
+                a = ""
+            elif a == "instant":
+                a = ""
+            elif a == "into_play":
+                select = True
+                into_play = True
+                a = i.id
+            elif a == "yes":
+                for i in sprites:
+                    if i.type == "button":
+                        i.kill()
+                reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
+                a = ""
+                choice = True
+            elif a == "no":
+                for i in sprites:
+                    if i.type == "button":
+                        i.kill()
+                reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
+                a = ""
+                choice = False
+                play = False
+                action_step = True
+                lock = False
+                type_check = "none"
+            elif a == "you":
+                a = ""
+                for i in sprites:
+                    if i.type == "button":
+                        i.kill()
+                reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
+                target_player = turn-1
+            elif a == "opponent":
+                a = ""
+                for i in sprites:
+                    if i.type == "button":
+                        i.kill()
+                reprint_hand(turn, top_of_gy, sprites, screen, hand_1, hand_2, gy)
+                if turn == 2:
+                    target_player = turn-2
                 else: 
-                    into_play = False
+                    target_player = turn
+            elif a == "target":
+                a = i.id
+                for i in sprites:
+                    if i.type == "button":
+                        i.kill()
+                select = True
+            else: 
+                into_play = False
     if b == 0 and type_check !="none":
         choice = False
         play = False

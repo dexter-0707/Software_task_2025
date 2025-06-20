@@ -12,7 +12,7 @@ def draw(k, n, hands, deck):
         hands[k-1].append(deck[0])
         deck.pop(0)
 def draw_hands(hand_1, hand_2, deck, sprites):
-    for i in range(7):
+    for i in range(5):
         hand_1.append(deck[0])
         deck.pop(0)
         hand_2.append(deck[0])
@@ -67,7 +67,6 @@ def print_hand(k, sprites, hand_1, hand_2, screen):
             position += spacing
     sprites.draw(screen) 
 def reprint_hand(k, n, sprites, screen, hand_1, hand_2, gy):
-    print(gy)
     position = 210
     spacing = 0
     sprites.draw(screen)
@@ -82,11 +81,11 @@ def reprint_hand(k, n, sprites, screen, hand_1, hand_2, gy):
                 gy.pop()
             if gy: 
                 n = gy[-1]
-                gy_change(n, screen, gy)
+                gy_change(n, screen)
             else:
                 n = 0
         else: 
-            gy_change(n, screen, gy)
+            gy_change(n, screen)
     if k == 1:
         if len(hand_2) > 4:
             spacing = (650)/(len(hand_2)-1)
@@ -119,7 +118,7 @@ def card_change(k, screen):
     image = pygame.image.load('public/'+ str(card[2:-3]))
     image = pygame.transform.smoothscale(image, (260,360))
     screen.blit(image,(1000,90))
-def gy_change(k, screen, gy):
+def gy_change(k, screen):
     a = int(k)
     while a >= 1000:
         a -= 1000
@@ -218,13 +217,11 @@ def make_choice(sprites, player_choice, target, discard, type_check):
         sprites.add(Button("blue", "yellow", pygame.Rect(635,240,150,100),"no", "No", "black"))
         sprites.add(Button("blue", "blue", pygame.Rect(410,100,400,100), "none", "Use Card Effect?", "black"))
 
-
 def animal_effects(k,t, hands, gy, deck, fields,sprites,screen, hand_1, hand_2, top):
     to_return = "a"
     while k > 1000:
         k-=1000
-    if k == 17:
-        draw(t,1, hands, deck)
+    if k == 17: draw(t,1, hands, deck)
     elif k == 18:
         for n in hands[t-1]:  
             gy.append(n)
@@ -235,23 +232,17 @@ def animal_effects(k,t, hands, gy, deck, fields,sprites,screen, hand_1, hand_2, 
         draw(t,3, hands, deck)
     elif k == 19:
         pass
-    elif k == 20:
-        to_return = ["play", "alpaca", "hand"]
-    elif k == 25:
-        to_return = ["play", "goat", "hand"]
+    elif k == 20: to_return = ["play", "alpaca", "hand"]
+    elif k == 25: to_return = ["play", "goat", "hand"]
     elif k == 31: 
         draw(t,3, hands, deck)
         try: 
             draw(t-1,1, hands, deck)
         except:
             draw(t+1,1, hands, deck)
-    elif k == 33:
-        to_return = ["play", "llama", "hand"]
-    elif k == 41: 
-        to_return = ["discard", "self", "any"]
-        sprites.add()
-    elif k == 44:
-        to_return = ["play", "ram", "hand"]
+    elif k == 33: to_return = ["play", "llama", "hand"]
+    elif k == 41: to_return = ["discard", "self", "any"]
+    elif k == 44: to_return = ["play", "ram", "hand"]
     elif k == 95:
         a = random.randint(1,12)
         while (a in fields[0]) or (a in fields[1]):
@@ -259,8 +250,7 @@ def animal_effects(k,t, hands, gy, deck, fields,sprites,screen, hand_1, hand_2, 
         fields[t-1].append(a)
         print_field(t-1,sprites,fields,screen)
         reprint_hand(t, top, sprites, screen, hand_1, hand_2, gy)
-    elif k == 105:
-        to_return = ["discard", "target", "all"]
+    elif k == 105: to_return = ["discard", "target", "all"]
     return to_return
 def magic_effects(k, t, hands, gy, deck, fields,sprites,screen, hand_1, hand_2, top):
     to_return = "a"
@@ -281,8 +271,7 @@ def magic_effects(k, t, hands, gy, deck, fields,sprites,screen, hand_1, hand_2, 
             gy.pop()
             global top_of_gy
             top_of_gy = gy[-1]
-    elif k == 70:
-        to_return = ["destroy", "target", "animal"]
+    elif k == 70: to_return = ["destroy", "target", "animal"]
     elif k == 111:
         fields[t-1].append(random.randint(1,12))
         win = print_field(t-1,sprites,fields,screen)
@@ -359,57 +348,44 @@ class Card(pygame.sprite.Sprite):
             img.blit(a, (0,0))
         return img
 
-    def update(self, events, discard, play, type_check, target, effect): # type: ignore
+    def update(self, events, discard, play, type_check, target, effect): 
         pos = pygame.mouse.get_pos()
         hit = self.rect.collidepoint(pos)
         i = 1
-        if self.animal_type[2:-3] in type_check and self.position == "hand" and self.type[2:-3] == "animal":
-            self.image = self.targ
+        if self.animal_type[2:-3] in type_check and self.position == "hand" and self.type[2:-3] == "animal": self.image = self.targ
         elif target == True:
             if effect[0] == "destroy" and effect[2] == "animal":
                 if self.position == "field" and self.flip == True and self.type[2:-3] == "animal":
                     self.image = self.targ
-        else:
-            self.image = self.org
+        else: self.image = self.org
         if type_check != "none":
             for event in events:
                 if i == 1:
                     if event.type == pygame.MOUSEBUTTONDOWN and hit:
                         if self.position == "hand":
                             if (self.type[2:-3]) == "animal":
-                                if type_check in (self.animal_type[2:-3]):
-                                    return "into_play"
-                            else:
-                                return self.id
-                    elif hit:
-                        return self.id
+                                if type_check in (self.animal_type[2:-3]): return "into_play"
+                            else: return self.id
+                    elif hit: return self.id
                     i += 1
         elif discard == True:
             for event in events:
                 if i == 1:
                     if event.type == pygame.MOUSEBUTTONDOWN and hit:
-                        if self.position == "hand":
-                            return "discard"
-                        else: 
-                            return self.id
-                    elif hit:
-                        return self.id
+                        if self.position == "hand": return "discard"
+                        else: return self.id
+                    elif hit: return self.id
                     i+=1
         elif play == True:
             for event in events:
                 if i == 1:
                     if event.type == pygame.MOUSEBUTTONDOWN and hit:
                         if self.position == "hand":
-                            if (self.type[2:-3]) != "instant":
-                                return "play"
-                            else:
-                                return "instant"
-                        elif self.position == "is_deck":
-                            return "draw_action"
-                        else:
-                            return self.id
-                    elif hit:
-                        return self.id
+                            if (self.type[2:-3]) != "instant": return "play"
+                            else: return "instant"
+                        elif self.position == "is_deck": return "draw_action"
+                        else: return self.id
+                    elif hit: return self.id
                     i+=1
         elif target == True:
             for event in events:
@@ -417,16 +393,13 @@ class Card(pygame.sprite.Sprite):
                     if event.type == pygame.MOUSEBUTTONDOWN and hit:
                         if effect[0] == "destroy":
                             if effect[2] == "animal":
-                                if self.position == "field" and self.flip == True and self.type[2:-3] == "animal":
-                                    return "target"
+                                if self.position == "field" and self.flip == True and self.type[2:-3] == "animal": return "target"
                                 else: return self.id
                             else: return self.id
-                    elif hit:
-                        return self.id
+                    elif hit: return self.id
                     i+=1
         else:
-            if hit:
-                return self.id
+            if hit: return self.id
 class Button(pygame.sprite.Sprite):
     def __init__(self, color, color_hover, rect, callback, text='', outline=None, type = "button"):
         super().__init__()

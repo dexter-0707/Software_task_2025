@@ -42,12 +42,8 @@ def inits():
     top_of_gy = ""
     global turn
     turn = 1
-    global hand_printed
-    hand_printed = False
     global game_start
     game_start = False
-    global Card_add
-    Card_add = False
     global discard
     discard = False
     global play
