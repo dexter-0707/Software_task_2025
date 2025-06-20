@@ -26,8 +26,8 @@ while running:
 #        hand_1.append(33) # magical llamacorn
 #        hand_1.append(34) # prehistoric llamadon
 #        hand_1.append(39) # henry the huarizo
-        hand_1.append(41) # gin-rammy
-        hand_1.append(44) # magical ramicorn
+#        hand_1.append(41) # gin-rammy
+#        hand_1.append(44) # magical ramicorn
 #        hand_1.append(95) # mother goat
 #        hand_1.append(105) # woolly rammoth
 #        hand_2.append(66) # garbage buffet
